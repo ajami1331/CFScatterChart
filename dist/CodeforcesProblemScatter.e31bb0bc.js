@@ -117,15 +117,330 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"index.js":[function(require,module,exports) {
+})({"../../../../../../../usr/lib/node_modules/parcel-bundler/node_modules/process/browser.js":[function(require,module,exports) {
+
+// shim for using process in browser
+var process = module.exports = {}; // cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+  throw new Error('setTimeout has not been defined');
+}
+
+function defaultClearTimeout() {
+  throw new Error('clearTimeout has not been defined');
+}
+
+(function () {
+  try {
+    if (typeof setTimeout === 'function') {
+      cachedSetTimeout = setTimeout;
+    } else {
+      cachedSetTimeout = defaultSetTimout;
+    }
+  } catch (e) {
+    cachedSetTimeout = defaultSetTimout;
+  }
+
+  try {
+    if (typeof clearTimeout === 'function') {
+      cachedClearTimeout = clearTimeout;
+    } else {
+      cachedClearTimeout = defaultClearTimeout;
+    }
+  } catch (e) {
+    cachedClearTimeout = defaultClearTimeout;
+  }
+})();
+
+function runTimeout(fun) {
+  if (cachedSetTimeout === setTimeout) {
+    //normal enviroments in sane situations
+    return setTimeout(fun, 0);
+  } // if setTimeout wasn't available but was latter defined
+
+
+  if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+    cachedSetTimeout = setTimeout;
+    return setTimeout(fun, 0);
+  }
+
+  try {
+    // when when somebody has screwed with setTimeout but no I.E. maddness
+    return cachedSetTimeout(fun, 0);
+  } catch (e) {
+    try {
+      // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+      return cachedSetTimeout.call(null, fun, 0);
+    } catch (e) {
+      // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+      return cachedSetTimeout.call(this, fun, 0);
+    }
+  }
+}
+
+function runClearTimeout(marker) {
+  if (cachedClearTimeout === clearTimeout) {
+    //normal enviroments in sane situations
+    return clearTimeout(marker);
+  } // if clearTimeout wasn't available but was latter defined
+
+
+  if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+    cachedClearTimeout = clearTimeout;
+    return clearTimeout(marker);
+  }
+
+  try {
+    // when when somebody has screwed with setTimeout but no I.E. maddness
+    return cachedClearTimeout(marker);
+  } catch (e) {
+    try {
+      // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+      return cachedClearTimeout.call(null, marker);
+    } catch (e) {
+      // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+      // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+      return cachedClearTimeout.call(this, marker);
+    }
+  }
+}
+
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+  if (!draining || !currentQueue) {
+    return;
+  }
+
+  draining = false;
+
+  if (currentQueue.length) {
+    queue = currentQueue.concat(queue);
+  } else {
+    queueIndex = -1;
+  }
+
+  if (queue.length) {
+    drainQueue();
+  }
+}
+
+function drainQueue() {
+  if (draining) {
+    return;
+  }
+
+  var timeout = runTimeout(cleanUpNextTick);
+  draining = true;
+  var len = queue.length;
+
+  while (len) {
+    currentQueue = queue;
+    queue = [];
+
+    while (++queueIndex < len) {
+      if (currentQueue) {
+        currentQueue[queueIndex].run();
+      }
+    }
+
+    queueIndex = -1;
+    len = queue.length;
+  }
+
+  currentQueue = null;
+  draining = false;
+  runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+  var args = new Array(arguments.length - 1);
+
+  if (arguments.length > 1) {
+    for (var i = 1; i < arguments.length; i++) {
+      args[i - 1] = arguments[i];
+    }
+  }
+
+  queue.push(new Item(fun, args));
+
+  if (queue.length === 1 && !draining) {
+    runTimeout(drainQueue);
+  }
+}; // v8 likes predictible objects
+
+
+function Item(fun, array) {
+  this.fun = fun;
+  this.array = array;
+}
+
+Item.prototype.run = function () {
+  this.fun.apply(null, this.array);
+};
+
+process.title = 'browser';
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) {
+  return [];
+};
+
+process.binding = function (name) {
+  throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () {
+  return '/';
+};
+
+process.chdir = function (dir) {
+  throw new Error('process.chdir is not supported');
+};
+
+process.umask = function () {
+  return 0;
+};
+},{}],"index.js":[function(require,module,exports) {
+
 document.getElementById('fetchButton').onclick = function () {
   var userName = document.getElementById('userName').value;
   var userInfoUrl = "https://codeforces.com/api/user.info?handles=";
-  fetch(userInfoUrl + userName).then(function (res) {
-    return console.log(res);
-  });
+  var userStatusUrl = "https://codeforces.com/api/user.status?handle=";
+  var userRatingUrl = "https://codeforces.com/api/user.rating?handle=";
+  Promise.all([userInfoUrl, userStatusUrl, userRatingUrl].map(function (url) {
+    return fetch(url + userName).then(function (res) {
+      return res.json();
+    }).then(function (body) {
+      return body.result;
+    });
+  })).then(process);
 };
-},{}],"../../../../../../../usr/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+
+var myChart;
+
+function process(res) {
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  console.log(res);
+  var ratingData = [];
+  var ratingColor = [];
+  var solveData = [];
+  var solveColor = [];
+  var canvas = document.getElementById('myChart');
+  var ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  res[1].forEach(function (item) {
+    if (item['verdict'] != 'OK') return;
+    solveData.push({
+      x: new Date(item['creationTimeSeconds'] * 1000),
+      y: item['problem'] && item['problem']['rating'] || 0
+    });
+    solveColor.push(getColor(item['problem'] && item['problem']['rating'] || 0));
+    '' + item['problem']['contestId'] + item['problem']['index'] + item['problem']['name'];
+  });
+  res[2].forEach(function (item) {
+    ratingData.push({
+      x: new Date(item['ratingUpdateTimeSeconds'] * 1000),
+      y: item['newRating'] || 0
+    });
+    ratingColor.push(getColor(item['newRating'] || 0));
+  });
+  console.log(ratingData);
+  console.log(solveData);
+  var config = {
+    type: 'line',
+    data: {
+      datasets: [{
+        label: 'Rating Data',
+        fill: false,
+        // borderColor: '#3f51b5',
+        borderColor: '#000000',
+        data: ratingData,
+        lineTension: 0,
+        pointBackgroundColor: ratingColor,
+        pointBorderColor: ratingColor,
+        pointRadius: 5
+      }, {
+        label: 'Solving Data',
+        fill: false,
+        // borderColor: 'rgba(255, 87, 34, 1)',
+        borderColor: '#000000',
+        data: solveData,
+        lineTension: 0,
+        showLine: false,
+        pointBackgroundColor: solveColor,
+        pointBorderColor: solveColor,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      title: {
+        text: 'Codeforces Compare'
+      },
+      scales: {
+        xAxes: [{
+          type: 'time',
+          time: {
+            unit: 'month'
+          }
+        }],
+        yAxes: [{
+          id: 'y-axis',
+          type: 'linear',
+          display: true,
+          position: 'left'
+        }]
+      },
+      elements: {
+        point: {
+          pointStyle: 'circle'
+        }
+      }
+    }
+  };
+  myChart = new Chart(ctx, config);
+}
+
+function getColor(point) {
+  if (point >= 2600) return '#f33';
+  if (point >= 2400 && point < 2600) return '#f77';
+  if (point >= 2300 && point < 2400) return '#fb5';
+  if (point >= 2100 && point < 2300) return '#fc8';
+  if (point >= 1900 && point < 2100) return '#f8f';
+  if (point >= 1600 && point < 1900) return '#aaf';
+  if (point >= 1400 && point < 1600) return '#7db';
+  if (point >= 1200 && point < 1400) return '#7f7';
+  return '#ccc';
+}
+},{"process":"../../../../../../../usr/lib/node_modules/parcel-bundler/node_modules/process/browser.js"}],"../../../../../../../usr/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -153,7 +468,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63633" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64632" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
