@@ -28,6 +28,7 @@ function process(res) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     res[1].forEach(item => {
         if (item['verdict'] != 'OK') return;
+        if (item['author']['participantType'] != 'PRACTICE') return;
         solveData.push({
             x: new Date(item['creationTimeSeconds'] * 1000),
             y: item['problem'] && item['problem']['rating'] || 0
